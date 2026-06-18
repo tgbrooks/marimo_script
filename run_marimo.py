@@ -95,7 +95,8 @@ print(cmd)
 
 print("-"*20)
 print(f"{GREEN}Open link to access Marimo:")
-link = f"http://localhost:{local_socket}?access_token={access_token}{RESET}"
+link = f"http://localhost:{local_socket}?access_token={access_token}"
+print(link + RESET)
 print("-"*20)
 
 # Start the port-forwarding
