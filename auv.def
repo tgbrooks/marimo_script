@@ -1,0 +1,81 @@
+Bootstrap: docker
+From: ubuntu:26.04
+
+%post
+    set -eux
+
+    export DEBIAN_FRONTEND=noninteractive
+
+    apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        wget \
+        git \
+        git-lfs \
+        openssh-client \
+        build-essential \
+        gcc \
+        g++ \
+        gfortran \
+        make \
+        cmake \
+        pkg-config \
+        python3.14 \
+        python3.14-dev \
+        python3.14-venv \
+        python3-pip \
+        libssl-dev \
+        libffi-dev \
+        libbz2-dev \
+        liblzma-dev \
+        zlib1g-dev \
+        libcurl4-openssl-dev \
+        libxml2-dev \
+        libblas-dev \
+        liblapack-dev \
+        libopenblas-dev \
+        less \
+        vim \
+        nano \
+        htop \
+        tmux \
+        rsync \
+        unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+    # Install uv system-wide
+    curl -LsSf https://astral.sh/uv/install.sh | \
+        UV_INSTALL_DIR=/usr/local/bin sh
+
+    # Rust toolchain for source builds (polars-bio, etc.)
+    export RUSTUP_HOME=/opt/rustup
+    export CARGO_HOME=/opt/cargo
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+        sh -s -- -y --default-toolchain stable --profile minimal \
+        --no-modify-path
+
+    # python -> python3.14
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.14 1
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
+
+%environment
+    export PATH=/usr/local/bin:/opt/cargo/bin:$PATH
+    export RUSTUP_HOME=/opt/rustup
+    export CARGO_HOME=/opt/cargo
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    export UV_CACHE_DIR=${UV_CACHE_DIR:-$HOME/.cache/uv}
+
+%labels
+    Purpose "Base image for uv-managed Python projects"
+    OS "Ubuntu 26.04 LTS (Resolute Raccoon)"
+    Python "3.14"
+    Built "2026"
+
+%help
+    Base container with modern glibc + Python 3.14 + uv + build tools.
+
+    Typical usage:
+        apptainer exec --bind $PWD base.sif uv venv --python python3.14 .venv
+        apptainer exec --bind $PWD base.sif uv sync
+        apptainer exec --bind $PWD base.sif .venv/bin/python script.py
