@@ -23,6 +23,9 @@ parser.add_argument("directory")
 parser.add_argument(
     "--bsub_args", help=f'arguments to use for bsub (default: "{DEFAULT_BSUB_ARGS}")'
 )
+parser.add_argument(
+    "-p", "--port", help="local port to try to use", type=int, default=None
+)
 args = parser.parse_args()
 
 
@@ -89,22 +92,25 @@ else:
 
 node = m_node.groups()[0]
 
-server_socket = m_socket.groups()[0]
+server_port = m_socket.groups()[0]
 access_token = m_socket.groups()[1]
 print(node)
-print(server_socket)
+print(server_port)
 print(access_token)
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as temp_sock:
-    temp_sock.bind(("", 0))
-    local_socket = temp_sock.getsockname()[1]
+if args.port is None:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as temp_sock:
+        temp_sock.bind(("", 0))
+        local_port = temp_sock.getsockname()[1]
+else:
+    local_port = args.port
 
-cmd = f"ssh -L {local_socket}:{node}:{server_socket} consign"
+cmd = f"ssh -L {local_port}:{node}:{server_port} consign"
 print(cmd)
 
 print("-" * 20)
 print(f"{GREEN}Open link to access Marimo:")
-link = f"http://localhost:{local_socket}?access_token={access_token}"
+link = f"http://localhost:{local_port}?access_token={access_token}"
 print(link + RESET)
 print("-" * 20)
 
